@@ -175,9 +175,12 @@ app.post('/api/candidates', async (req, res) => {
       const name = nameMatch ? nameMatch[1].trim() : nameText;
       const hanja = nameMatch && nameMatch[2] ? nameMatch[2].replace(/[\(\)]/g, '').trim() : '';
 
-      const nameOnclick = nameLink.attr('onclick') || '';
-      const huboMatch = nameOnclick.match(/popupHBJ\('([^']+)','([^']+)'\)/);
-      const huboId = huboMatch ? huboMatch[2] : '';
+      let huboId = nameLink.attr('id') || '';
+      if (!huboId) {
+        const nameHref = nameLink.attr('href') || '';
+        const huboMatch = nameHref.match(/popupHBJ\('([^']+)','([^']+)'\)/);
+        huboId = huboMatch ? huboMatch[2] : '';
+      }
 
       candidates.push({
         district: getCellText(0),
