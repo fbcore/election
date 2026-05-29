@@ -564,4 +564,38 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isNaN(val)) return taxStr; // 숫자가 아닌 원본 텍스트는 그대로 유지
     return `${val.toLocaleString('ko-KR')}천원`;
   }
+
+  // ─── 방문자 카운터 ───────────────────────────────────────────
+  function animateCount(el, targetVal) {
+    const duration = 1000; // 1초
+    const startTime = performance.now();
+    const startVal = 0;
+    function update(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo 곡선
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(startVal + (targetVal - startVal) * eased);
+      el.textContent = current.toLocaleString('ko-KR');
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  async function initVisitorCounter() {
+    try {
+      const res = await fetch('/api/visitor', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        const todayEl = document.getElementById('visitor-today');
+        const totalEl = document.getElementById('visitor-total');
+        if (todayEl) animateCount(todayEl, data.today);
+        if (totalEl) animateCount(totalEl, data.total);
+      }
+    } catch (e) {
+      console.warn('방문자 카운터 호출 실패:', e);
+    }
+  }
+
+  initVisitorCounter();
 });

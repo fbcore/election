@@ -1,9 +1,34 @@
 const express = require('express');
 const cheerio = require('cheerio');
 const path = require('node:path');
+const fs = require('node:fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// 방문자 카운터 파일 경로
+const COUNTER_FILE = path.join(__dirname, 'visitor_count.json');
+
+// 카운터 파일 초기화 (없으면 생성)
+function loadCounter() {
+  try {
+    if (fs.existsSync(COUNTER_FILE)) {
+      const data = fs.readFileSync(COUNTER_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (e) {
+    console.error('카운터 파일 읽기 실패:', e.message);
+  }
+  return { total: 0, today: 0, lastDate: new Date().toISOString().slice(0, 10) };
+}
+
+function saveCounter(counter) {
+  try {
+    fs.writeFileSync(COUNTER_FILE, JSON.stringify(counter), 'utf-8');
+  } catch (e) {
+    console.error('카운터 파일 저장 실패:', e.message);
+  }
+}
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -389,6 +414,31 @@ app.post('/api/candidate-detail-links', async (req, res) => {
     console.error('PDF API error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// 5. 방문자 카운터 API
+app.post('/api/visitor', (req, res) => {
+  const counter = loadCounter();
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  // 날짜가 바뀌면 오늘 카운터 초기화
+  if (counter.lastDate !== todayStr) {
+    counter.today = 0;
+    counter.lastDate = todayStr;
+  }
+
+  counter.total += 1;
+  counter.today += 1;
+  saveCounter(counter);
+
+  res.json({ success: true, total: counter.total, today: counter.today });
+});
+
+app.get('/api/visitor', (req, res) => {
+  const counter = loadCounter();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const today = counter.lastDate === todayStr ? counter.today : 0;
+  res.json({ success: true, total: counter.total, today });
 });
 
 app.listen(PORT, () => {

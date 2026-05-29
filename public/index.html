@@ -97,6 +97,19 @@
 
     <footer class="app-footer">
       <p>본 서비스는 중앙선거관리위원회 선거통계시스템의 공개 데이터를 실시간으로 중계합니다.</p>
+      <div class="visitor-counter">
+        <div class="visitor-counter-item">
+          <i class="fa-solid fa-eye"></i>
+          <span class="visitor-label">오늘 방문자</span>
+          <span class="visitor-value" id="visitor-today">-</span>
+        </div>
+        <div class="visitor-divider"></div>
+        <div class="visitor-counter-item">
+          <i class="fa-solid fa-users"></i>
+          <span class="visitor-label">누적 방문자</span>
+          <span class="visitor-value" id="visitor-total">-</span>
+        </div>
+      </div>
     </footer>
   </div>
   <script src="app.js"></script>

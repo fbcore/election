@@ -787,7 +787,58 @@ body {
 }
 
 .app-footer p {
-  margin-bottom: 6px;
+  margin-bottom: 14px;
+}
+
+/* 방문자 카운터 */
+.visitor-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7), rgba(240,244,255,0.6));
+  border: 1px solid rgba(99,102,241,0.18);
+  border-radius: 40px;
+  padding: 10px 24px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 12px rgba(99,102,241,0.08);
+  margin-top: 8px;
+  gap: 16px;
+}
+
+.visitor-counter-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.visitor-counter-item i {
+  font-size: 0.78rem;
+  color: var(--primary-color);
+  opacity: 0.8;
+}
+
+.visitor-label {
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.visitor-value {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--primary-color);
+  min-width: 32px;
+  display: inline-block;
+  text-align: left;
+}
+
+.visitor-divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(99,102,241,0.2);
+  flex-shrink: 0;
 }
 
 /* Utilities */
@@ -1197,4 +1248,19 @@ body {
 .candidate-photo-party-tag.party-progressive { background-color: var(--party-progressive); }
 .candidate-photo-party-tag.party-greenjustice { background-color: var(--party-greenjustice); }
 .candidate-photo-party-tag.party-etc { background-color: var(--party-etc); }
+
+/* Faction Tags for Education Candidates */
+.candidate-photo-party-tag.faction-liberal { background-color: #1e88e5; }
+.candidate-photo-party-tag.faction-conservative { background-color: #e53935; }
+.candidate-photo-party-tag.faction-unknown { background-color: #757575; }
+.badge-liberal {
+  background: #e3f2fd;
+  color: #1e88e5;
+  border: 1px solid rgba(30, 136, 229, 0.15);
+}
+.badge-conservative {
+  background: #ffebee;
+  color: #e53935;
+  border: 1px solid rgba(229, 57, 53, 0.15);
+}
 
