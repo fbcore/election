@@ -288,7 +288,7 @@ app.post('/api/candidates', async (req, res) => {
   }
 });
 
-// 3. 네이버 뉴스 검색 API
+// 3. 구글 뉴스 RSS 검색 API (봇 탐지 차단 방지)
 app.post('/api/news', async (req, res) => {
   const { query } = req.body;
   if (!query) {
@@ -296,64 +296,48 @@ app.post('/api/news', async (req, res) => {
   }
 
   try {
-    const searchUrl = `https://search.naver.com/search.naver?where=news&query=${encodeURIComponent(query)}`;
-    const response = await fetch(searchUrl, {
+    // 구글 뉴스 RSS API 호출
+    const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=ko&gl=KR&ceid=KR:ko`;
+    const response = await fetch(rssUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Naver search responded with status: ${response.status}`);
+      throw new Error(`Google News RSS responded with status: ${response.status}`);
     }
 
-    const html = await response.text();
-    const $ = cheerio.load(html);
+    const xml = await response.text();
+    const $ = cheerio.load(xml, { xmlMode: true }); // XML 파싱 모드 활성화
     const newsItems = [];
 
-    // 네이버 뉴스의 최신 UI(2026년 기준) 데이터 어트리뷰트 기반 검색
-    const items = $('[data-heatmap-target=".tit"]');
-    
-    if (items.length > 0) {
-      // 1. 최신형 Fender UI 뉴스 템플릿 파싱
-      items.each((i, el) => {
-        if (i >= 5) return;
-        const titleEl = $(el);
-        const title = titleEl.text().trim();
-        const link = titleEl.attr('href');
-        
-        // 형제 혹은 상위 컴포넌트에서 desc(body)와 press(prof)를 수집
-        const cardArea = titleEl.closest('[class*="desktop_mode"], div.gvH4i3x6Vuf5y8wHb_DX, div.sds-comps-vertical-layout');
-        const descEl = cardArea.find('[data-heatmap-target=".body"]');
-        const desc = descEl.text().trim();
-        
-        // 언론사(prof) 찾기
-        const pressEl = cardArea.find('[data-heatmap-target=".prof"]').eq(1); // 0번째는 보통 로고 이미지, 1번째가 한글 언론사명 텍스트
-        const press = pressEl.text().trim() || '언론사';
+    $('item').each((i, el) => {
+      if (i >= 5) return; // 최대 5개 기사만 제한
+      
+      const rawTitle = $(el).find('title').text().trim();
+      const link = $(el).find('link').text().trim();
+      const press = $(el).find('source').text().trim() || '언론사';
+      
+      // 구글 뉴스 타이틀은 보통 "기사 제목 - 언론사명" 형태이므로 뒷부분의 언론사명 분리 정리
+      let title = rawTitle;
+      const dashIdx = rawTitle.lastIndexOf(' - ');
+      if (dashIdx !== -1) {
+        title = rawTitle.substring(0, dashIdx).trim();
+      }
 
-        if (title && link) {
-          newsItems.push({ title, link, press, desc });
-        }
-      });
-    } else {
-      // 2. 구형/모바일 UI 또는 일반 뉴스 래퍼 파싱 (백업용 하이브리드 지원)
-      $('.news_wrap').each((i, el) => {
-        if (i >= 5) return;
-        const titleEl = $(el).find('.news_tit');
-        const title = titleEl.text().trim();
-        const link = titleEl.attr('href');
-        const press = $(el).find('.info_group a.info.press').text().trim().replace(/언론사 선정/g, '');
-        const desc = $(el).find('.news_dsc').text().trim();
+      // RSS의 description 내의 HTML 태그 정제하여 요약 텍스트 추출
+      const rawDesc = $(el).find('description').text().trim();
+      const desc = rawDesc.replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').trim();
 
-        if (title && link) {
-          newsItems.push({ title, link, press, desc });
-        }
-      });
-    }
+      if (title && link) {
+        newsItems.push({ title, link, press, desc });
+      }
+    });
 
     res.json({ success: true, news: newsItems });
   } catch (error) {
-    console.error('News API error:', error);
+    console.error('Google News RSS API error:', error);
     res.status(500).json({ success: false, message: '뉴스 기사를 가져오는 중 오류가 발생했습니다.', error: error.message });
   }
 });
