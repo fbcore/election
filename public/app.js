@@ -305,7 +305,10 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="info-item">
                 <span class="label">세금 납부</span>
-                <span class="val ${taxOverdueClass}">납부: ${formatTax(c.taxPaid)} (체납: ${formatTax(c.taxOverdueCurrent)})</span>
+                <span class="val ${taxOverdueClass}">
+                  납부: ${formatTax(c.taxPaid)} 
+                  ${(hasTaxOverdue5 || hasTaxOverdueCur) ? `(체납액: ${hasTaxOverdueCur ? formatTax(c.taxOverdueCurrent) : formatTax(c.taxOverdue5Years)})` : '(체납 없음)'}
+                </span>
               </div>
               <div class="info-item" style="grid-column: span 2;">
                 <span class="label">전과 기록</span>
