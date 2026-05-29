@@ -237,29 +237,18 @@ app.post('/api/news', async (req, res) => {
     const $ = cheerio.load(html);
     const newsItems = [];
 
-    $('[data-heatmap-target=".tit"]').each((i, el) => {
+    $('.news_wrap').each((i, el) => {
       if (i >= 5) return; // 최대 5개 기사만 수집
       
-      const titleEl = $(el);
+      const titleEl = $(el).find('.news_tit');
       const title = titleEl.text().trim();
       const link = titleEl.attr('href');
-      
-      const parent = titleEl.parent();
-      const descEl = parent.parent().find('[data-heatmap-target=".body"]');
-      const desc = descEl.text().trim();
-      
-      // 언론사 찾기
-      const searchArea = titleEl.parent().parent().parent().parent();
-      let press = '';
-      searchArea.find('a[href*="press"]').each((j, pressEl) => {
-        const text = $(pressEl).text().trim();
-        if (text) {
-          press = text;
-          return false; // break
-        }
-      });
+      const press = $(el).find('.info_group a.info.press').text().trim().replace(/언론사 선정/g, '');
+      const desc = $(el).find('.news_dsc').text().trim();
 
-      newsItems.push({ title, link, press, desc });
+      if (title && link) {
+        newsItems.push({ title, link, press, desc });
+      }
     });
 
     res.json({ success: true, news: newsItems });
