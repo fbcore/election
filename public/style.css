@@ -214,6 +214,7 @@ body {
   gap: 8px;
   box-shadow: var(--shadow-elevation-1);
   transition: var(--transition-smooth);
+  white-space: nowrap; /* 줄바꿈 방지 */
 }
 
 .btn-submit:hover {
@@ -423,10 +424,19 @@ body {
 }
 
 .election-card-body h3 {
-  font-size: 1.3rem;
+  font-size: 1.45rem; /* 선거 종류 글자를 더 크게 확대 */
   font-weight: 800;
-  color: var(--text-primary);
-  margin-top: 12px;
+  color: var(--primary-color);
+  margin-top: 10px;
+  line-height: 1.3;
+}
+
+.election-district-sub {
+  font-size: 0.85rem; /* 선거구 명칭은 작게 지정 */
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: block;
+  margin-top: 4px;
 }
 
 .election-card-footer {

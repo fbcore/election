@@ -41,6 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
       hideElements([loader]);
 
       if (data.success && data.emds.length > 0) {
+        // 검색 완료 후 검색창 섹션을 화면에서 숨김
+        const searchSection = document.querySelector('.search-section');
+        if (searchSection) searchSection.classList.add('hide');
+
         renderEmdList(data.emds);
         showElements([emdSection]);
       } else {
@@ -92,11 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'election-card card';
       card.innerHTML = `
         <div class="election-card-header">
-          <span class="election-type-badge">${elec.type}</span>
           <span class="quota-pill">정수: ${elec.count}명</span>
         </div>
         <div class="election-card-body">
-          <h3>${elec.districtName}</h3>
+          <h3>${elec.type}</h3>
+          <span class="election-district-sub">${elec.districtName}</span>
         </div>
         <div class="election-card-footer">
           <span>${elec.memo ? `<i class="fa-solid fa-circle-info"></i> ${elec.memo}` : ''}</span>
