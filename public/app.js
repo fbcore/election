@@ -305,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div class="info-item">
                 <span class="label">세금 납부</span>
-                <span class="val ${taxOverdueClass}">납부: ${c.taxPaid}천원 (체납: ${c.taxOverdueCurrent}천원)</span>
+                <span class="val ${taxOverdueClass}">납부: ${formatTax(c.taxPaid)} (체납: ${formatTax(c.taxOverdueCurrent)})</span>
               </div>
               <div class="info-item" style="grid-column: span 2;">
                 <span class="label">전과 기록</span>
@@ -489,5 +489,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const eok = absVal / 100000; // 1억원 = 100,000천원
     const formatted = `${isNegative ? '-' : ''}${eok.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}억원`;
     return formatted;
+  }
+
+  function formatTax(taxStr) {
+    if (!taxStr) return '0천원';
+    const val = parseInt(taxStr.replace(/,/g, ''), 10);
+    if (isNaN(val)) return taxStr; // 숫자가 아닌 원본 텍스트는 그대로 유지
+    return `${val.toLocaleString('ko-KR')}천원`;
   }
 });
