@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>우리동네 선거구 및 후보자 조회 서비스</title>
+  <!-- Google Fonts: Outfit & Noto Sans KR -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="decorations">
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <div class="container">
+    <header class="app-header">
+      <div class="logo">
+        <i class="fa-solid fa-vote-yea logo-icon"></i>
+        <span>VOTE INFOPORTAL</span>
+      </div>
+      <h1>우리동네 선거구 & 후보자 찾기</h1>
+      <p class="subtitle">지번/도로명 주소의 읍·면·동명을 입력하여 내 선거구와 후보자 명단, 당선인원 정보를 확인하세요.</p>
+    </header>
+
+    <main class="app-main">
+      <!-- 검색 섹션 -->
+      <section class="search-section card">
+        <form id="search-form" class="search-form">
+          <div class="input-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" id="search-input" placeholder="예: 역삼동, 과천동, 분당동" required autocomplete="off">
+            <button type="submit" class="btn-submit">
+              <span>검색하기</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </button>
+          </div>
+        </form>
+        <div class="search-options">
+          <span class="label">대상 선거:</span>
+          <span class="badge badge-election">
+            <i class="fa-solid fa-calendar-check"></i>
+            제9회 전국동시지방선거 (2026. 6. 3)
+          </span>
+        </div>
+      </section>
+
+      <!-- 로딩 인디케이터 -->
+      <div id="loader" class="loader-wrapper hide">
+        <div class="spinner"></div>
+        <p>선거관리위원회 정보를 파싱하는 중입니다...</p>
+      </div>
+
+      <!-- 에러 메시지 -->
+      <div id="error-message" class="error-card hide">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <p class="message-text">검색 결과가 없거나 오류가 발생했습니다.</p>
+      </div>
+
+      <!-- 행정동 선택 결과 -->
+      <section id="emd-selection-section" class="emd-selection-section hide">
+        <h2 class="section-title"><i class="fa-solid fa-map-location-dot"></i> 검색된 주소 목록</h2>
+        <div id="emd-list" class="emd-grid">
+          <!-- 행정동 카드 동적 삽입 -->
+        </div>
+      </section>
+
+      <!-- 선거 목록 & 선출정수 -->
+      <section id="election-list-section" class="election-list-section hide">
+        <div class="section-header">
+          <h2 class="section-title"><i class="fa-solid fa-list-check"></i> 선거구 및 당선 정수</h2>
+          <span id="selected-emd-path" class="emd-path">서울특별시 강남구 역삼1동</span>
+        </div>
+        <div id="election-grid" class="election-grid">
+          <!-- 선거구 리스트 동적 삽입 -->
+        </div>
+      </section>
+
+      <!-- 후보자 명부 섹션 -->
+      <section id="candidates-section" class="candidates-section hide">
+        <div class="section-header-candidates">
+          <div class="header-left">
+            <span class="back-btn" id="close-candidates-btn"><i class="fa-solid fa-chevron-left"></i> 선거구 목록으로</span>
+            <h2 id="selected-election-title" class="section-title">구·시·군의회의원선거 후보자</h2>
+          </div>
+          <div class="header-right">
+            <span class="district-badge" id="selected-district-name">강남구다선거구</span>
+            <span class="quota-badge" id="selected-election-quota">당선인원: 3명</span>
+          </div>
+        </div>
+        <div id="candidates-grid" class="candidates-grid">
+          <!-- 후보자 카드 동적 삽입 -->
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>본 서비스는 중앙선거관리위원회 선거통계시스템의 공개 데이터를 실시간으로 중계합니다.</p>
+      <p>COPYRIGHT &copy; 2026 VOTE INFOPORTAL. ALL RIGHTS RESERVED.</p>
+    </footer>
+  </div>
+</body>
+</html>
