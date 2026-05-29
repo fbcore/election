@@ -185,8 +185,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const candidateWealth = parseInt(c.wealth.replace(/,/g, ''), 10) || 0;
       const avgWealth = 471440;
       const ratio = (candidateWealth / avgWealth).toFixed(1);
-      // 5배수일 때 100% 차도록 설정 (1배수 = 20%)
-      const barWidth = Math.max(0, Math.min((candidateWealth / avgWealth) * 20, 100));
+
+      // --- 비선형 로그 스케일 기반 게이지 너비 계산 ---
+      // 재산이 지나치게 많아도 로그 스케일을 사용해 변화폭을 보여주며, 마이너스 재산은 0% 근처로 수렴
+      let barWidth = 0;
+      if (candidateWealth > 0) {
+        // 국민 평균 자산(4.71억)일 때 정확히 게이지의 40% 지점에 위치하도록 로그 곡선 튜닝
+        // base = e^(ln(avgWealth) / 0.4) => log_base(candidateWealth) = 0.4 * ln(candidateWealth) / ln(avgWealth)
+        // 100억원(10,000,000천원) 정도가 되었을 때 약 80~90%에 다다르게 설계하여 극단적인 초고자산가도 게이지 내에서 변동성을 갖습니다.
+        const calculatedWidth = (Math.log(candidateWealth) / Math.log(avgWealth)) * 40;
+        barWidth = Math.max(5, Math.min(calculatedWidth, 100));
+      } else {
+        // 마이너스 재산 또는 0원 이하는 3%의 최소 게이지 폭만 확보
+        barWidth = 3;
+      }
+
+      // 평균 마커 역시 로그 스케일에 비례하도록 40% 위치로 지정
+      const averageMarkerPercent = 40;
 
       card.innerHTML = `
         <div class="candidate-card-content">
@@ -228,7 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div class="wealth-graph-container">
                     <div class="wealth-bar-container">
                       <div class="wealth-bar-fill" style="width: ${barWidth}%;"></div>
-                      <div class="wealth-average-marker" style="left: 20%;" title="국민 평균 순자산 (4.71억원)"></div>
+                      <div class="wealth-average-marker" style="left: ${averageMarkerPercent}%;" title="국민 평균 순자산 (4.71억원)"></div>
                     </div>
                     <span class="wealth-ratio-label">국민 평균 순자산(4.71억원)의 <strong class="${parseFloat(ratio) >= 1 ? 'warning-highlight' : 'cyan-highlight'}">${ratio}배</strong></span>
                   </div>
