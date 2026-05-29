@@ -155,9 +155,11 @@ app.post('/api/candidates', async (req, res) => {
         return cells.eq(index).text().trim().replace(/\s+/g, ' ');
       };
 
-      // 교육감 선거(정당 추천 없음)의 경우 '정당' 컬럼이 아예 없어서 컬럼 개수가 1개 적음 (17개 컬럼)
-      // 일반적인 선거는 18개 컬럼
-      const isEduElection = (cells.length === 17);
+      // 선거 종류별로 테이블의 총 컬럼 개수가 달라짐
+      // 1. 일반 선거: 18개 컬럼
+      // 2. 교육감 선거 (정당 없음, 기호 없음): 16개 컬럼
+      // 3. 비례대표 등 기타 선거: 17개 컬럼
+      const totalCols = cells.length;
 
       // 이미지 분석 (두 번째 컬럼)
       const imgInput = cells.eq(1).find('input[type="image"]');
@@ -175,47 +177,107 @@ app.post('/api/candidates', async (req, res) => {
         photoUrl = thumbUrl;
       }
 
-      // 성명 및 상세 링크 파싱 (정당 컬럼 유무에 따라 인덱스 보정)
-      const nameIndex = isEduElection ? 3 : 4;
-      const nameLink = cells.eq(nameIndex).find('a');
-      const nameText = getCellText(nameIndex);
-      const nameMatch = nameText.match(/^([^\(]+)\s*(\([^\)]+\))?$/);
-      const name = nameMatch ? nameMatch[1].trim() : nameText;
-      const hanja = nameMatch && nameMatch[2] ? nameMatch[2].replace(/[\(\)]/g, '').trim() : '';
+      let name = '';
+      let hanja = '';
+      let huboId = '';
+      let party = '무소속';
 
-      let huboId = nameLink.attr('id') || '';
+      // 각 데이터의 인덱스 매핑 설정 (컬럼 개수에 따름)
+      let nameIdx, genderIdx, birthIdx, addressIdx, jobIdx, eduIdx, careerIdx, wealthIdx, milIdx, taxIdx, overdue5Idx, overdueCurIdx, crimIdx, countIdx;
+
+      if (totalCols === 16) {
+        // 교육감 선거 (정당 컬럼 없고 기호 컬럼 없음)
+        party = '무소속 (교육감)';
+        nameIdx = 2;
+        genderIdx = 3;
+        birthIdx = 4;
+        addressIdx = 5;
+        jobIdx = 6;
+        eduIdx = 7;
+        careerIdx = 8;
+        wealthIdx = 9;
+        milIdx = 10;
+        taxIdx = 11;
+        overdue5Idx = 12;
+        overdueCurIdx = 13;
+        crimIdx = 14;
+        countIdx = 15;
+      } else if (totalCols === 17) {
+        // 교육의원 등 기호가 있거나 정당이 누락된 17개 컬럼 선거
+        party = '무소속';
+        nameIdx = 3;
+        genderIdx = 4;
+        birthIdx = 5;
+        addressIdx = 6;
+        jobIdx = 7;
+        eduIdx = 8;
+        careerIdx = 9;
+        wealthIdx = 10;
+        milIdx = 11;
+        taxIdx = 12;
+        overdue5Idx = 13;
+        overdueCurIdx = 14;
+        crimIdx = 15;
+        countIdx = 16;
+      } else {
+        // 일반 선거 (18개 컬럼)
+        party = getCellText(3);
+        nameIdx = 4;
+        genderIdx = 5;
+        birthIdx = 6;
+        addressIdx = 7;
+        jobIdx = 8;
+        eduIdx = 9;
+        careerIdx = 10;
+        wealthIdx = 11;
+        milIdx = 12;
+        taxIdx = 13;
+        overdue5Idx = 14;
+        overdueCurIdx = 15;
+        crimIdx = 16;
+        countIdx = 17;
+      }
+
+      // 성명 파싱
+      const nameLink = cells.eq(nameIdx).find('a');
+      const nameText = getCellText(nameIdx);
+      const nameMatch = nameText.match(/^([^\(]+)\s*(\([^\)]+\))?$/);
+      name = nameMatch ? nameMatch[1].trim() : nameText;
+      hanja = nameMatch && nameMatch[2] ? nameMatch[2].replace(/[\(\)]/g, '').trim() : '';
+
+      huboId = nameLink.attr('id') || '';
       if (!huboId) {
         const nameHref = nameLink.attr('href') || '';
         const huboMatch = nameHref.match(/popupHBJ\('([^']+)','([^']+)'\)/);
         huboId = huboMatch ? huboMatch[2] : '';
       }
 
-      // 인덱스 보정 헬퍼
-      // 정당이 없으면 성명 이후의 모든 인덱스가 -1 됨
-      const getIdx = (baseIdx) => isEduElection ? baseIdx - 1 : baseIdx;
+      // 기호(symbol) 설정
+      // 교육감선거(16개)는 기호가 없으므로 공백 또는 "순환" 처리
+      const symbol = totalCols === 16 ? '-' : getCellText(2);
 
       candidates.push({
         district: getCellText(0),
         thumbUrl,
         photoUrl,
-        symbol: getCellText(2),
-        party: isEduElection ? '무소속 (교육감)' : getCellText(3),
+        symbol,
+        party,
         name,
         hanja,
         huboId,
-        gender: getCellText(getIdx(5)),
-        birthAndAge: getCellText(getIdx(6)),
-        address: getCellText(getIdx(7)),
-        job: getCellText(getIdx(8)),
-        education: getCellText(getIdx(9)),
-        career: cells.eq(getIdx(10)).html() ? cells.eq(getIdx(10)).html().trim().replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ') : '',
-        wealth: getCellText(getIdx(11)),
-        military: getCellText(getIdx(12)),
-        taxPaid: getCellText(getIdx(13)),
-        taxOverdue5Years: getCellText(getIdx(14)),
-        taxOverdueCurrent: getCellText(getIdx(15)),
-        criminal: getCellText(getIdx(16)),
-        candidaciesCount: getCellText(getIdx(17))
+        gender: getCellText(genderIdx),
+        birthAndAge: getCellText(birthIdx),
+        address: getCellText(addressIdx),
+        job: getCellText(jobIdx),
+        education: getCellText(eduIdx),
+        career: cells.eq(careerIdx).html() ? cells.eq(careerIdx).html().trim().replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ') : '',
+        wealth: getCellText(wealthIdx),
+        military: getCellText(milIdx),
+        taxPaid: getCellText(taxIdx),
+        taxOverdue5Years: getCellText(overdue5Idx),
+        taxOverdueCurrent: getCellText(overdueCurIdx),
+        criminal: getCellText(crimIdx),
+        candidaciesCount: getCellText(countIdx)
       });
     });
 
