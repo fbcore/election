@@ -66,7 +66,7 @@ app.post('/api/search', async (req, res) => {
           const count = parseInt(countText, 10) || 0;
           const memo = zoneDiv.find('span.memo').text().trim();
           
-          const sgId = sggLink.attr('data-sg-id');
+          const sgId = sggLink.attr('data-sg-id') || electionId;
           const typeCode = sggLink.attr('data-sg-typecode');
           const cityCode = sggLink.attr('data-city-code');
           const sggTownCode = sggLink.attr('data-sgg-town-code');

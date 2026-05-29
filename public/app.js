@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${hasTaxOverdue5 ? `<span class="badge badge-warning" title="최근 5년간 체납액: ${c.taxOverdue5Years}천원"><i class="fa-solid fa-clock-rotate-left"></i> 최근 5년간 체납 이력 (${formatTax(c.taxOverdue5Years)})</span>` : ''}
                 </div>
               </div>
-              <a href="https://info.nec.go.kr/electioninfo/candidate_detail_info.xhtml?electionId=${election.sgId}&huboId=${c.huboId}" target="_blank" class="official-info-btn">
+              <a href="https://info.nec.go.kr/electioninfo/candidate_detail_info.xhtml?electionId=${election.sgId || '0020260603'}&huboId=${c.huboId}" target="_blank" class="official-info-btn">
                 <i class="fa-solid fa-address-card"></i> 선관위 상세정보
               </a>
             </div>
