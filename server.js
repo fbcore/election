@@ -182,12 +182,15 @@ app.post('/api/candidates', async (req, res) => {
       let huboId = '';
       let party = '무소속';
 
-      // 각 데이터의 인덱스 매핑 설정 (컬럼 개수에 따름)
+      // 각 데이터의 인덱스 매핑 설정 (컬럼 개수 및 선거 종류에 따름)
       let nameIdx, genderIdx, birthIdx, addressIdx, jobIdx, eduIdx, careerIdx, wealthIdx, milIdx, taxIdx, overdue5Idx, overdueCurIdx, crimIdx, countIdx;
+      let symbol = '-';
+      const isProp = electionCode.toString() === '8' || electionCode.toString() === '9';
 
       if (totalCols === 16) {
         // 교육감 선거 (정당 컬럼 없고 기호 컬럼 없음)
         party = '무소속 (교육감)';
+        symbol = '-';
         nameIdx = 2;
         genderIdx = 3;
         birthIdx = 4;
@@ -205,6 +208,7 @@ app.post('/api/candidates', async (req, res) => {
       } else if (totalCols === 17) {
         // 교육의원 등 기호가 있거나 정당이 누락된 17개 컬럼 선거
         party = '무소속';
+        symbol = getCellText(2);
         nameIdx = 3;
         genderIdx = 4;
         birthIdx = 5;
@@ -221,7 +225,13 @@ app.post('/api/candidates', async (req, res) => {
         countIdx = 16;
       } else {
         // 일반 선거 (18개 컬럼)
-        party = getCellText(3).trim();
+        if (isProp) {
+          party = getCellText(2).trim(); // 비례대표는 2번 셀이 정당명(기호)
+          symbol = getCellText(3).trim(); // 3번 셀이 추천 순번
+        } else {
+          party = getCellText(3).trim(); // 일반선거는 3번 셀이 정당명
+          symbol = getCellText(2).trim(); // 2번 셀이 기호
+        }
         nameIdx = 4;
         genderIdx = 5;
         birthIdx = 6;
@@ -251,10 +261,6 @@ app.post('/api/candidates', async (req, res) => {
         const huboMatch = nameHref.match(/popupHBJ\('([^']+)','([^']+)'\)/);
         huboId = huboMatch ? huboMatch[2] : '';
       }
-
-      // 기호(symbol) 설정
-      // 교육감선거(16개)는 기호가 없으므로 공백 또는 "순환" 처리
-      const symbol = totalCols === 16 ? '-' : getCellText(2);
 
       candidates.push({
         district: getCellText(0),
