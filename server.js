@@ -311,19 +311,45 @@ app.post('/api/news', async (req, res) => {
     const $ = cheerio.load(html);
     const newsItems = [];
 
-    $('.news_wrap').each((i, el) => {
-      if (i >= 5) return; // 최대 5개 기사만 수집
-      
-      const titleEl = $(el).find('.news_tit');
-      const title = titleEl.text().trim();
-      const link = titleEl.attr('href');
-      const press = $(el).find('.info_group a.info.press').text().trim().replace(/언론사 선정/g, '');
-      const desc = $(el).find('.news_dsc').text().trim();
+    // 네이버 뉴스의 최신 UI(2026년 기준) 데이터 어트리뷰트 기반 검색
+    const items = $('[data-heatmap-target=".tit"]');
+    
+    if (items.length > 0) {
+      // 1. 최신형 Fender UI 뉴스 템플릿 파싱
+      items.each((i, el) => {
+        if (i >= 5) return;
+        const titleEl = $(el);
+        const title = titleEl.text().trim();
+        const link = titleEl.attr('href');
+        
+        // 형제 혹은 상위 컴포넌트에서 desc(body)와 press(prof)를 수집
+        const cardArea = titleEl.closest('[class*="desktop_mode"], div.gvH4i3x6Vuf5y8wHb_DX, div.sds-comps-vertical-layout');
+        const descEl = cardArea.find('[data-heatmap-target=".body"]');
+        const desc = descEl.text().trim();
+        
+        // 언론사(prof) 찾기
+        const pressEl = cardArea.find('[data-heatmap-target=".prof"]').eq(1); // 0번째는 보통 로고 이미지, 1번째가 한글 언론사명 텍스트
+        const press = pressEl.text().trim() || '언론사';
 
-      if (title && link) {
-        newsItems.push({ title, link, press, desc });
-      }
-    });
+        if (title && link) {
+          newsItems.push({ title, link, press, desc });
+        }
+      });
+    } else {
+      // 2. 구형/모바일 UI 또는 일반 뉴스 래퍼 파싱 (백업용 하이브리드 지원)
+      $('.news_wrap').each((i, el) => {
+        if (i >= 5) return;
+        const titleEl = $(el).find('.news_tit');
+        const title = titleEl.text().trim();
+        const link = titleEl.attr('href');
+        const press = $(el).find('.info_group a.info.press').text().trim().replace(/언론사 선정/g, '');
+        const desc = $(el).find('.news_dsc').text().trim();
+
+        if (title && link) {
+          newsItems.push({ title, link, press, desc });
+        }
+      });
+    }
 
     res.json({ success: true, news: newsItems });
   } catch (error) {
