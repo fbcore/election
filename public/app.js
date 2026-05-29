@@ -154,6 +154,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCandidates(candidates, election) {
     candidatesGrid.innerHTML = '';
     
+    // 무투표 당선 감지 (선출 정수보다 후보자가 같거나 적은 경우)
+    const isUncontested = candidates.length <= election.count;
+    if (isUncontested) {
+      const banner = document.createElement('div');
+      banner.className = 'uncontested-banner';
+      banner.innerHTML = `
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>이 선거구는 후보자 수(<strong>${candidates.length}명</strong>)가 선출 정수(<strong>${election.count}명</strong>)와 같거나 적어, 투표를 실시하지 않는 <strong>'무투표 당선'</strong> 선거구입니다.</span>
+      `;
+      candidatesGrid.appendChild(banner);
+    }
+    
     candidates.forEach(c => {
       const card = document.createElement('div');
       card.className = 'candidate-card card';
@@ -165,6 +177,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const criminalClass = c.criminal !== '없음' ? 'danger-highlight' : '';
       const taxOverdueClass = (c.taxOverdue5Years !== '0' || c.taxOverdueCurrent !== '0') ? 'warning-highlight' : '';
 
+      // 재산 배율 및 그래프 계산 (국민 평균 순자산: 4억 7,144만 원 = 471,440천원)
+      const candidateWealth = parseInt(c.wealth.replace(/,/g, ''), 10) || 0;
+      const avgWealth = 471440;
+      const ratio = (candidateWealth / avgWealth).toFixed(1);
+      // 5배수일 때 100% 차도록 설정 (1배수 = 20%)
+      const barWidth = Math.max(0, Math.min((candidateWealth / avgWealth) * 20, 100));
+
       card.innerHTML = `
         <div class="candidate-card-content">
           <div class="candidate-photo-wrapper">
@@ -175,10 +194,15 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="candidate-header">
               <div class="candidate-header-left">
                 <h3>${c.name} <span class="candidate-hanja">${c.hanja ? `(${c.hanja})` : ''}</span></h3>
-                <p class="candidate-party-label ${partyClass}">${c.party}</p>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 5px;">
+                  <span class="candidate-party-label ${partyClass}">${c.party}</span>
+                  ${isUncontested ? `<span class="badge badge-uncontested">무투표 당선 예정</span>` : ''}
+                  ${c.criminal !== '없음' ? `<span class="badge badge-danger" title="${c.criminal}"><i class="fa-solid fa-triangle-exclamation"></i> 전과 ${c.criminal}</span>` : ''}
+                  ${(c.taxOverdue5Years !== '0' || c.taxOverdueCurrent !== '0') ? `<span class="badge badge-warning" title="5년간 체납액: ${c.taxOverdue5Years}천원 / 현체납액: ${c.taxOverdueCurrent}천원"><i class="fa-solid fa-receipt"></i> 세금 체납</span>` : ''}
+                </div>
               </div>
               <a href="https://info.nec.go.kr/electioninfo/candidate_detail_info.xhtml?electionId=${election.sgId}&huboId=${c.huboId}" target="_blank" class="official-info-btn">
-                <i class="fa-solid fa-address-card"></i> 선관위 상세 정보
+                <i class="fa-solid fa-address-card"></i> 선관위 상세정보
               </a>
             </div>
             
@@ -191,10 +215,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="label">직업/학력</span>
                 <span class="val">${c.job} / ${c.education}</span>
               </div>
-              <div class="info-item">
+              
+              <!-- 재산 배율 및 시각 그래프 -->
+              <div class="info-item wealth-item" style="grid-column: span 2;">
                 <span class="label">재산 신고액</span>
-                <span class="val">${formatWealth(c.wealth)}</span>
+                <div class="wealth-info-wrapper">
+                  <span class="val">${formatWealth(c.wealth)}</span>
+                  <div class="wealth-graph-container">
+                    <div class="wealth-bar-container">
+                      <div class="wealth-bar-fill" style="width: ${barWidth}%;"></div>
+                      <div class="wealth-average-marker" style="left: 20%;" title="국민 평균 순자산 (4.71억원)"></div>
+                    </div>
+                    <span class="wealth-ratio-label">국민 평균 순자산(4.71억원)의 <strong class="${parseFloat(ratio) >= 1 ? 'warning-highlight' : 'cyan-highlight'}">${ratio}배</strong></span>
+                  </div>
+                </div>
               </div>
+              
               <div class="info-item">
                 <span class="label">병역 사항</span>
                 <span class="val">${c.military}</span>
@@ -203,13 +239,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="label">세금 납부</span>
                 <span class="val ${taxOverdueClass}">납부: ${c.taxPaid}천원 (체납: ${c.taxOverdueCurrent}천원)</span>
               </div>
-              <div class="info-item">
+              <div class="info-item" style="grid-column: span 2;">
                 <span class="label">전과 기록</span>
                 <span class="val ${criminalClass}">${c.criminal}</span>
               </div>
               <div class="info-item" style="grid-column: span 2;">
                 <span class="label">주요 경력</span>
                 <span class="val">${c.career || '기록 없음'}</span>
+              </div>
+              
+              <!-- 상세 PDF 연동 링크 영역 -->
+              <div class="info-item pdf-item" style="grid-column: span 2;">
+                <span class="label">상세 서류</span>
+                <div class="pdf-links-container" id="pdfs-${c.huboId}">
+                  <span class="pdf-loading"><i class="fa-solid fa-circle-notch fa-spin"></i> 상세 PDF 불러오는 중...</span>
+                </div>
               </div>
             </div>
             
@@ -234,6 +278,40 @@ document.addEventListener('DOMContentLoaded', () => {
       newsBtn.addEventListener('click', () => {
         toggleNews(newsBtn, newsAccordion, c.name, election.districtName);
       });
+
+      // 비동기 PDF 상세 서류 링크 로드
+      (async () => {
+        try {
+          const res = await fetch('/api/candidate-detail-links', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ electionId: election.sgId, huboId: c.huboId })
+          });
+          const data = await res.json();
+          const pdfContainer = card.querySelector(`#pdfs-${c.huboId}`);
+          
+          if (data.success && data.pdfs) {
+            pdfContainer.innerHTML = '';
+            const links = [];
+            if (data.pdfs.criminal) links.push(`<a href="${data.pdfs.criminal}" target="_blank" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> 전과상세</a>`);
+            if (data.pdfs.wealth) links.push(`<a href="${data.pdfs.wealth}" target="_blank" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> 재산상세</a>`);
+            if (data.pdfs.military) links.push(`<a href="${data.pdfs.military}" target="_blank" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> 병역상세</a>`);
+            if (data.pdfs.tax) links.push(`<a href="${data.pdfs.tax}" target="_blank" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> 납세상세</a>`);
+            if (data.pdfs.education) links.push(`<a href="${data.pdfs.education}" target="_blank" class="btn-pdf"><i class="fa-solid fa-file-pdf"></i> 학력상세</a>`);
+            
+            if (links.length > 0) {
+              pdfContainer.innerHTML = links.join('');
+            } else {
+              pdfContainer.innerHTML = '<span class="pdf-empty">제공되는 상세 서류 PDF가 없습니다.</span>';
+            }
+          } else {
+            pdfContainer.innerHTML = '<span class="pdf-empty">상세 서류 조회가 지원되지 않습니다.</span>';
+          }
+        } catch (err) {
+          console.error('PDF fetch error:', err);
+          card.querySelector(`#pdfs-${c.huboId}`).innerHTML = '<span class="pdf-empty">PDF 로드 실패</span>';
+        }
+      })();
 
       candidatesGrid.appendChild(card);
     });
