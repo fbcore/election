@@ -19,6 +19,51 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeCandidatesBtn = document.getElementById('close-candidates-btn');
 
   let currentEmdData = null;
+  let isAutoFilled = false; // 자동 기입 상태 플래그
+
+  // 브라우저 위치 정보 기반으로 행정동명 자동 입력
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      try {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        // 무료 역지오코딩 API 호출 (BigDataCloud - 무인증 키 제공)
+        const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=ko`);
+        const geoData = await response.json();
+        
+        // 동명 추출 (예: "역삼1동" 또는 "역삼동" 등)
+        let dongName = '';
+        if (geoData.locality) {
+          // 행정동 단위 추출을 위해 locality 또는 영도구 남항동처럼 마지막 단어가 '동/읍/면'으로 끝나는 값 파싱
+          const tokens = geoData.locality.split(' ');
+          dongName = tokens.find(t => t.endsWith('동') || t.endsWith('읍') || t.endsWith('면')) || geoData.locality;
+        }
+
+        if (dongName) {
+          searchInput.value = dongName;
+          isAutoFilled = true; // 자동 기입됨을 표시
+        }
+      } catch (err) {
+        console.warn('Geolocation reverse-geocode failed:', err);
+      }
+    }, (err) => {
+      console.warn('Geolocation position access denied or error:', err);
+    });
+  }
+
+  // 사용자가 입력 필드 클릭(포커스) 시 자동 입력된 값 지우기
+  searchInput.addEventListener('focus', () => {
+    if (isAutoFilled) {
+      searchInput.value = '';
+      isAutoFilled = false; // 플래그 초기화
+    }
+  });
+
+  // 사용자가 타이핑하면 자동 기입 플래그 해제
+  searchInput.addEventListener('input', () => {
+    isAutoFilled = false;
+  });
 
   // 1. 주소(읍면동) 검색 제출
   searchForm.addEventListener('submit', async (e) => {
