@@ -221,7 +221,7 @@ app.post('/api/candidates', async (req, res) => {
         countIdx = 16;
       } else {
         // 일반 선거 (18개 컬럼)
-        party = getCellText(3);
+        party = getCellText(3).trim();
         nameIdx = 4;
         genderIdx = 5;
         birthIdx = 6;

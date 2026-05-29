@@ -222,10 +222,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isProportional && candidates.length > 0) {
       const partyGroups = {};
       candidates.forEach(c => {
-        if (!partyGroups[c.party]) {
-          partyGroups[c.party] = [];
+        const pName = (c.party || '').trim();
+        if (!partyGroups[pName]) {
+          partyGroups[pName] = [];
         }
-        partyGroups[c.party].push(c);
+        partyGroups[pName].push(c);
       });
       
       const parties = Object.keys(partyGroups);
@@ -264,8 +265,9 @@ document.addEventListener('DOMContentLoaded', () => {
       card.className = 'candidate-card card';
       
       if (isProportional) {
-        card.setAttribute('data-party', c.party);
-        if (c.party !== firstParty) {
+        const pName = (c.party || '').trim();
+        card.setAttribute('data-party', pName);
+        if (pName !== firstParty) {
           card.classList.add('hide');
         }
       }
