@@ -281,9 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // 체납 정보의 포맷 정규화 및 체납 유무 판별 (0, '', '없음' 외의 실질적 값 확인)
       const hasTaxOverdue5 = c.taxOverdue5Years && c.taxOverdue5Years !== '0' && c.taxOverdue5Years !== '없음' && c.taxOverdue5Years !== '';
       const hasTaxOverdueCur = c.taxOverdueCurrent && c.taxOverdueCurrent !== '0' && c.taxOverdueCurrent !== '없음' && c.taxOverdueCurrent !== '';
+      const isNotServed = c.military && c.military.includes('군복무를 마치지 아니한 사람');
       
       // 체납 심각도 클래스 매핑 (현재 체납 진행 중일 때 danger-highlight 적용, 단순 과거 이력은 warning-highlight 적용)
       const taxOverdueClass = hasTaxOverdueCur ? 'danger-highlight' : (hasTaxOverdue5 ? 'warning-highlight' : '');
+      const militaryClass = isNotServed ? 'danger-highlight' : '';
 
       // 재산 배율 및 그래프 계산 (국민 평균 순자산: 4억 7,144만 원 = 471,440천원)
       const candidateWealth = parseInt(c.wealth.replace(/,/g, ''), 10) || 0;
@@ -322,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span class="candidate-party-label ${partyClass}">${c.party}</span>
                   ${isUncontested ? `<span class="badge badge-uncontested">무투표 당선 예정</span>` : ''}
                   ${c.criminal !== '없음' ? `<span class="badge badge-danger" title="${c.criminal}"><i class="fa-solid fa-triangle-exclamation"></i> 전과 ${c.criminal}</span>` : ''}
+                  ${isNotServed ? `<span class="badge badge-danger" title="병역: 군복무를 마치지 아니한 사람"><i class="fa-solid fa-shield-halved"></i> 군복무 미필</span>` : ''}
                   ${hasTaxOverdueCur ? `<span class="badge badge-danger" title="현재 체납액: ${c.taxOverdueCurrent}천원"><i class="fa-solid fa-receipt"></i> 현재 세금 체납 (${formatTax(c.taxOverdueCurrent)})</span>` : ''}
                   ${hasTaxOverdue5 ? `<span class="badge badge-warning" title="최근 5년간 체납액: ${c.taxOverdue5Years}천원"><i class="fa-solid fa-clock-rotate-left"></i> 최근 5년간 체납 이력 (${formatTax(c.taxOverdue5Years)})</span>` : ''}
                 </div>
@@ -358,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
               
               <div class="info-item">
                 <span class="label">병역 사항</span>
-                <span class="val">${c.military}</span>
+                <span class="val ${militaryClass}">${c.military}</span>
               </div>
               <div class="info-item" style="grid-column: span 2;">
                 <span class="label">세금 납부</span>
