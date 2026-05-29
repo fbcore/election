@@ -866,6 +866,7 @@ body {
   align-items: center;
   gap: 12px;
   width: 100%;
+  padding-bottom: 15px; /* 평균 표시 뱃지가 아래에 위치하므로 하단 여백 추가 */
 }
 
 @media (max-width: 580px) {
@@ -904,7 +905,7 @@ body {
 .wealth-average-marker::before {
   content: '평균';
   position: absolute;
-  bottom: 22px;
+  top: 24px; /* 위쪽 텍스트와의 겹침 방지를 위해 아래쪽으로 위치 변경 */
   transform: translateX(-50%);
   font-size: 0.65rem;
   color: #ffffff;
