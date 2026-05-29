@@ -224,7 +224,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 전과 및 체납 강조 표시
       const criminalClass = c.criminal !== '없음' ? 'danger-highlight' : '';
-      const taxOverdueClass = (c.taxOverdue5Years !== '0' || c.taxOverdueCurrent !== '0') ? 'warning-highlight' : '';
+      
+      // 체납 정보의 포맷 정규화 및 체납 유무 판별 (0, '', '없음' 외의 실질적 값 확인)
+      const hasTaxOverdue5 = c.taxOverdue5Years && c.taxOverdue5Years !== '0' && c.taxOverdue5Years !== '없음' && c.taxOverdue5Years !== '';
+      const hasTaxOverdueCur = c.taxOverdueCurrent && c.taxOverdueCurrent !== '0' && c.taxOverdueCurrent !== '없음' && c.taxOverdueCurrent !== '';
+      const taxOverdueClass = (hasTaxOverdue5 || hasTaxOverdueCur) ? 'warning-highlight' : '';
 
       // 재산 배율 및 그래프 계산 (국민 평균 순자산: 4억 7,144만 원 = 471,440천원)
       const candidateWealth = parseInt(c.wealth.replace(/,/g, ''), 10) || 0;
@@ -262,7 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span class="candidate-party-label ${partyClass}">${c.party}</span>
                   ${isUncontested ? `<span class="badge badge-uncontested">무투표 당선 예정</span>` : ''}
                   ${c.criminal !== '없음' ? `<span class="badge badge-danger" title="${c.criminal}"><i class="fa-solid fa-triangle-exclamation"></i> 전과 ${c.criminal}</span>` : ''}
-                  ${(c.taxOverdue5Years !== '0' || c.taxOverdueCurrent !== '0') ? `<span class="badge badge-warning" title="5년간 체납액: ${c.taxOverdue5Years}천원 / 현체납액: ${c.taxOverdueCurrent}천원"><i class="fa-solid fa-receipt"></i> 세금 체납</span>` : ''}
+                  ${(hasTaxOverdue5 || hasTaxOverdueCur) ? `<span class="badge badge-warning" title="5년간 체납액: ${c.taxOverdue5Years}천원 / 현체납액: ${c.taxOverdueCurrent}천원"><i class="fa-solid fa-receipt"></i> 세금 체납</span>` : ''}
                 </div>
               </div>
               <a href="https://info.nec.go.kr/electioninfo/candidate_detail_info.xhtml?electionId=${election.sgId}&huboId=${c.huboId}" target="_blank" class="official-info-btn">
