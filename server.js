@@ -269,6 +269,49 @@ app.post('/api/news', async (req, res) => {
   }
 });
 
+// 4. 후보자 상세 PDF 링크 조회 API
+app.post('/api/candidate-detail-links', async (req, res) => {
+  const { electionId, huboId } = req.body;
+  if (!electionId || !huboId) {
+    return res.status(400).json({ success: false, message: 'electionId와 huboId가 필요합니다.' });
+  }
+  
+  try {
+    const pdfs = {};
+    const gubuns = {
+      education: '1',
+      wealth: '2',
+      tax: '3',
+      military: '4',
+      criminal: '5'
+    };
+    
+    const fetchPromises = Object.entries(gubuns).map(async ([key, gubun]) => {
+      const url = `https://info.nec.go.kr/electioninfo/candidate_detail_scanSearchJson.json?gubun=${gubun}&electionId=${electionId}&huboId=${huboId}&statementId=CPRI03_candidate_scanSearch`;
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        }
+      });
+      const data = await response.json();
+      const body = data.jsonResult?.body;
+      if (body && body.length > 0) {
+        const filePath = body[0].FILEPATH;
+        if (filePath) {
+          const pdfPath = filePath.replace(/\.(tif|TIF|tiff|TIFF)$/, '.PDF');
+          pdfs[key] = `https://info.nec.go.kr/unielec_pdf_file/${pdfPath}`;
+        }
+      }
+    });
+    
+    await Promise.all(fetchPromises);
+    res.json({ success: true, pdfs });
+  } catch (error) {
+    console.error('PDF API error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
