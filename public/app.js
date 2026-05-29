@@ -214,10 +214,61 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       candidatesGrid.appendChild(banner);
     }
+
+    // 비례대표 여부 판별 (타입코드가 '8' 또는 '9'인 경우)
+    const isProportional = election.typeCode === '8' || election.typeCode === '9';
+    let firstParty = '';
+    
+    if (isProportional && candidates.length > 0) {
+      const partyGroups = {};
+      candidates.forEach(c => {
+        if (!partyGroups[c.party]) {
+          partyGroups[c.party] = [];
+        }
+        partyGroups[c.party].push(c);
+      });
+      
+      const parties = Object.keys(partyGroups);
+      if (parties.length > 0) {
+        firstParty = parties[0];
+        
+        const tabContainer = document.createElement('div');
+        tabContainer.className = 'party-tabs-container';
+        
+        parties.forEach((party, index) => {
+          const tabBtn = document.createElement('button');
+          tabBtn.className = `party-tab-btn ${index === 0 ? 'active' : ''}`;
+          tabBtn.textContent = `${party} (${partyGroups[party].length}명)`;
+          tabBtn.addEventListener('click', () => {
+            tabContainer.querySelectorAll('.party-tab-btn').forEach(btn => btn.classList.remove('active'));
+            tabBtn.classList.add('active');
+            
+            // 정당별 후보 필터링
+            candidatesGrid.querySelectorAll('.candidate-card').forEach(card => {
+              if (card.getAttribute('data-party') === party) {
+                card.classList.remove('hide');
+              } else {
+                card.classList.add('hide');
+              }
+            });
+          });
+          tabContainer.appendChild(tabBtn);
+        });
+        
+        candidatesGrid.appendChild(tabContainer);
+      }
+    }
     
     candidates.forEach(c => {
       const card = document.createElement('div');
       card.className = 'candidate-card card';
+      
+      if (isProportional) {
+        card.setAttribute('data-party', c.party);
+        if (c.party !== firstParty) {
+          card.classList.add('hide');
+        }
+      }
       
       // 당과 관련된 CSS 클래스 얻기
       const partyClass = getPartyClass(c.party);
