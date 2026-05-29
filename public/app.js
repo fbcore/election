@@ -411,13 +411,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function formatWealth(wealthStr) {
-    const val = parseInt(wealthStr.replace(/,/g, ''), 10);
+    const val = parseInt(wealthStr.replace(/,/g, ''), 10); // 천원 단위 수치
     if (isNaN(val)) return wealthStr;
-    if (val >= 1000000) {
-      const eok = Math.floor(val / 100000);
-      const nam = Math.round((val % 100000) / 100);
-      return `${(eok / 10).toFixed(1)}억원 (${wealthStr}천원)`;
-    }
-    return `${wealthStr}천원`;
+    
+    // 마이너스 재산 처리
+    const isNegative = val < 0;
+    const absVal = Math.abs(val);
+    
+    const eok = absVal / 100000; // 1억원 = 100,000천원
+    const formatted = `${isNegative ? '-' : ''}${eok.toLocaleString('ko-KR', { minimumFractionDigits: 1, maximumFractionDigits: 2 })}억원`;
+    return formatted;
   }
 });
