@@ -640,9 +640,9 @@ body {
   font-size: 0.9rem;
 }
 
-@media (max-width: 580px) {
+@media (max-width: 768px) { /* 모바일 최적화 기준선인 768px 이하로 수정 */
   .candidate-info-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr !important; /* 모바일 기기 전체에서 무조건 1열 단일 컬럼으로 강제 적용 */
   }
 }
 
