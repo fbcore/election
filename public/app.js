@@ -186,22 +186,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const avgWealth = 471440;
       const ratio = (candidateWealth / avgWealth).toFixed(1);
 
-      // --- 비선형 로그 스케일 기반 게이지 너비 계산 ---
-      // 재산이 지나치게 많아도 로그 스케일을 사용해 변화폭을 보여주며, 마이너스 재산은 0% 근처로 수렴
+      // --- 동적 선형 비례 스케일 기반 게이지 너비 계산 ---
+      // 1. 해당 선거구 후보자 전체 목록 중 최대 재산액(양수 기준)을 구합니다.
+      const wealthValues = candidates.map(cand => parseInt(cand.wealth.replace(/,/g, ''), 10) || 0);
+      const maxWealth = Math.max(...wealthValues, avgWealth); // 최소 평균값(4.71억) 이상을 기준으로 설정하여 극소 자산선거구에서도 형태 보장
+
       let barWidth = 0;
       if (candidateWealth > 0) {
-        // 국민 평균 자산(4.71억)일 때 정확히 게이지의 40% 지점에 위치하도록 로그 곡선 튜닝
-        // base = e^(ln(avgWealth) / 0.4) => log_base(candidateWealth) = 0.4 * ln(candidateWealth) / ln(avgWealth)
-        // 100억원(10,000,000천원) 정도가 되었을 때 약 80~90%에 다다르게 설계하여 극단적인 초고자산가도 게이지 내에서 변동성을 갖습니다.
-        const calculatedWidth = (Math.log(candidateWealth) / Math.log(avgWealth)) * 40;
-        barWidth = Math.max(5, Math.min(calculatedWidth, 100));
+        // 최대 재산 대비 비례 비율(%)을 구합니다.
+        barWidth = Math.max(5, Math.min((candidateWealth / maxWealth) * 100, 100));
       } else {
         // 마이너스 재산 또는 0원 이하는 3%의 최소 게이지 폭만 확보
         barWidth = 3;
       }
 
-      // 평균 마커 역시 로그 스케일에 비례하도록 40% 위치로 지정
-      const averageMarkerPercent = 40;
+      // 2. 최대 재산 대비 국민 평균(4.71억)의 비율 위치로 평균 마커를 동적 세팅합니다.
+      const averageMarkerPercent = Math.max(5, Math.min((avgWealth / maxWealth) * 100, 95));
 
       card.innerHTML = `
         <div class="candidate-card-content">
