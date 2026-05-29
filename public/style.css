@@ -1176,3 +1176,24 @@ body {
   }
 }
 
+/* Candidate Photo Party Tag */
+.candidate-photo-party-tag {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #ffffff;
+  z-index: 10;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+}
+.candidate-photo-party-tag.party-minjoo { background-color: var(--party-minjoo); }
+.candidate-photo-party-tag.party-gukmin { background-color: var(--party-gukmin); }
+.candidate-photo-party-tag.party-reform { background-color: var(--party-reform); }
+.candidate-photo-party-tag.party-progressive { background-color: var(--party-progressive); }
+.candidate-photo-party-tag.party-greenjustice { background-color: var(--party-greenjustice); }
+.candidate-photo-party-tag.party-etc { background-color: var(--party-etc); }
+

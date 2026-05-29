@@ -312,6 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="candidate-photo-wrapper">
             <span class="candidate-symbol-tag">${c.symbol}</span>
             <img src="${c.thumbUrl || 'https://via.placeholder.com/150x200?text=No+Image'}" alt="${c.name}" class="candidate-photo" onerror="this.src='https://via.placeholder.com/150x200?text=No+Image'">
+            ${(c.party && !c.party.includes('무소속')) ? `<div class="candidate-photo-party-tag ${partyClass}">${c.party}</div>` : ''}
           </div>
           <div class="candidate-details">
             <div class="candidate-header">
